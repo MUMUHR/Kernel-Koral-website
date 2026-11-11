@@ -10,31 +10,85 @@ export default function Navbar({ onStartQuiz }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const [isDarkTheme, setIsDarkTheme] = useState(false);
+  const [activeSection, setActiveSection] = useState<'home' | 'about' | 'explore' | 'playground' | 'distributions' | 'ecosystem'>('home');
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
 
+      const aboutEl = document.getElementById('about');
       const transitionEl = document.getElementById('transition');
       const playgroundEl = document.getElementById('playground');
+      const exploreEl = document.getElementById('explore');
+      const distributionsEl = document.getElementById('distributions');
+      const ecosystemEl = document.getElementById('ecosystem');
+      const quizEl = document.getElementById('quiz');
+      const ctaEl = document.getElementById('cta');
+      const footerEl = document.getElementById('footer');
 
+      const aboutRect = aboutEl ? aboutEl.getBoundingClientRect() : null;
       const transRect = transitionEl ? transitionEl.getBoundingClientRect() : null;
       const playRect = playgroundEl ? playgroundEl.getBoundingClientRect() : null;
+      const expRect = exploreEl ? exploreEl.getBoundingClientRect() : null;
+      const distRect = distributionsEl ? distributionsEl.getBoundingClientRect() : null;
+      const ecoRect = ecosystemEl ? ecosystemEl.getBoundingClientRect() : null;
+      const quizRect = quizEl ? quizEl.getBoundingClientRect() : null;
+      const ctaRect = ctaEl ? ctaEl.getBoundingClientRect() : null;
+      const footerRect = footerEl ? footerEl.getBoundingClientRect() : null;
 
-      // In Section 4 (Playground)
-      if (playRect && playRect.top <= 100) {
+      // In Footer (Dark World)
+      if (footerRect && footerRect.top <= 100) {
         setIsDarkTheme(true);
         setIsHidden(false);
+        setActiveSection('ecosystem');
+      }
+      // In CTA (#FFC500) or Quiz (#F0F0F0) - Light World
+      else if ((ctaRect && ctaRect.top <= 100) || (quizRect && quizRect.top <= 100)) {
+        setIsDarkTheme(false);
+        setIsHidden(false);
+        setActiveSection('ecosystem');
+      }
+      // In Section 6 (Ecosystem - Dark World)
+      else if (ecoRect && ecoRect.top <= 100) {
+        setIsDarkTheme(true);
+        setIsHidden(false);
+        setActiveSection('ecosystem');
+      }
+      // In Section 5 (Distributions - Light World again)
+      else if (distRect && distRect.top <= 100) {
+        setIsDarkTheme(false);
+        setIsHidden(false);
+        setActiveSection('distributions');
+      }
+      // In Command Explorer (Dark World)
+      else if (expRect && expRect.top <= 100) {
+        setIsDarkTheme(true);
+        setIsHidden(false);
+        setActiveSection('explore');
+      }
+      // In Section 4 (Playground - Dark World)
+      else if (playRect && playRect.top <= 100) {
+        setIsDarkTheme(true);
+        setIsHidden(false);
+        setActiveSection('playground');
       }
       // In Section 3 (Transition Pinning Area)
       else if (transRect && transRect.top <= 100) {
         setIsHidden(true);
         setIsDarkTheme(false);
+        setActiveSection('about');
       }
-      // In Section 1 & 2 (Light World)
+      // In Section 2 (About Linux)
+      else if (aboutRect && aboutRect.top <= 100) {
+        setIsHidden(false);
+        setIsDarkTheme(false);
+        setActiveSection('about');
+      }
+      // In Section 1 (Hero)
       else {
         setIsHidden(false);
         setIsDarkTheme(false);
+        setActiveSection('home');
       }
     };
 
@@ -76,64 +130,42 @@ export default function Navbar({ onStartQuiz }: NavbarProps) {
             isDarkTheme ? 'text-white' : 'text-black'
           }`}
         >
-          <a
-            href="#home"
-            className="relative py-2 font-medium tracking-wide flex flex-col items-center"
-          >
-            <span className={isDarkTheme ? 'text-white/70 hover:text-white' : 'text-black'}>
-              Home
-            </span>
-            {!isDarkTheme && (
-              <span className="absolute bottom-0 w-full h-[2px] bg-[#FFC500]" />
-            )}
-          </a>
-          <a
-            href="#about"
-            className={`py-2 tracking-wide transition-colors ${
-              isDarkTheme
-                ? 'text-white/70 hover:text-white'
-                : 'text-black/70 hover:text-black'
-            }`}
-          >
-            About Linux
-          </a>
-          <a
-            href="#explore"
-            className={`py-2 tracking-wide transition-colors ${
-              isDarkTheme
-                ? 'text-white/70 hover:text-white'
-                : 'text-black/70 hover:text-black'
-            }`}
-          >
-            Explore
-          </a>
-          <a
-            href="#playground"
-            className="relative py-2 font-medium tracking-wide flex flex-col items-center"
-          >
-            <span
-              className={
-                isDarkTheme
-                  ? 'text-white'
-                  : 'text-black/70 hover:text-black'
-              }
-            >
-              Playground
-            </span>
-            {isDarkTheme && (
-              <span className="absolute bottom-0 w-full h-[2px] bg-[#FFC500]" />
-            )}
-          </a>
-          <a
-            href="#distributions"
-            className={`py-2 tracking-wide transition-colors ${
-              isDarkTheme
-                ? 'text-white/70 hover:text-white'
-                : 'text-black/70 hover:text-black'
-            }`}
-          >
-            Distributions
-          </a>
+          {(
+            [
+              { id: 'home', href: '#home', label: 'Home' },
+              { id: 'about', href: '#about', label: 'About Linux' },
+              { id: 'explore', href: '#explore', label: 'Explore' },
+              { id: 'playground', href: '#playground', label: 'Playground' },
+              { id: 'distributions', href: '#distributions', label: 'Distributions' },
+              { id: 'ecosystem', href: '#ecosystem', label: 'Ecosystem' },
+            ] as const
+          ).map((item) => {
+            const isActive = activeSection === item.id;
+            return (
+              <a
+                key={item.id}
+                href={item.href}
+                className="relative py-2 font-medium tracking-wide flex flex-col items-center transition-colors"
+              >
+                <span
+                  className={
+                    isActive
+                      ? isDarkTheme
+                        ? 'text-white'
+                        : 'text-black'
+                      : isDarkTheme
+                      ? 'text-white/70 hover:text-white'
+                      : 'text-black/70 hover:text-black'
+                  }
+                >
+                  {item.label}
+                </span>
+                {isActive && (
+                  <span className="absolute bottom-0 w-full h-[2px] bg-[#FFC500]" />
+                )}
+              </a>
+            );
+          })}
         </nav>
 
         {/* Action Button */}

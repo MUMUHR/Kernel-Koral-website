@@ -14,8 +14,6 @@ const INITIAL_HISTORY: CommandEntry[] = [
   { id: '1', command: 'whoami', output: 'linux-explorer' },
   { id: '2', command: 'pwd', output: '/home/linux-explorer' },
   { id: '3', command: 'ls', output: 'Documents  Downloads  Projects  kernel.c' },
-  { id: '4', command: 'echo "Hello Linux!"', output: 'Hello Linux!' }
-  ,
 ];
 
 const SUGGESTIONS = ['whoami', 'pwd', 'ls', 'uname', 'tux'];
@@ -151,7 +149,7 @@ export default function TerminalPreview() {
         {/* Command Body / History */}
         <div
           ref={scrollRef}
-          className="p-5 max-h-[260px] sm:max-h-[290px] overflow-y-auto space-y-3 text-[13px] leading-relaxed scrollbar-thin scrollbar-thumb-white/20"
+          className="px-4 py-3.5 sm:px-5 sm:py-4 max-h-[210px] sm:max-h-[240px] lg:max-h-[clamp(200px,28vh,280px)] overflow-y-auto space-y-2 text-[13px] leading-snug scrollbar-thin scrollbar-thumb-white/20"
         >
           {history.map((item) => (
             <div key={item.id} className="space-y-1">

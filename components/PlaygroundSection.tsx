@@ -31,26 +31,23 @@ interface CommandEntry {
 const CTF_STAGES = [
   {
     stage: 1,
-    layer: 'LAYER 01 — BASE64',
+    layer: 'LAYER 01 — ENCODED PAYLOAD',
     ciphertext: 'dGFubG5mX3FyeHBieWFoX3RoeW9v',
     hint: 'Tidak semua teks yang terlihat acak merupakan hasil enkripsi. Identifikasi encoding-nya terlebih dahulu.',
-    commandHint: "echo 'dGFubG5mX3FyeHBieWFoX3RoeW9v' | base64 -d",
     answer: 'tanlnf_qrxpbyah_thyoo',
   },
   {
     stage: 2,
-    layer: 'LAYER 02 — ROT13',
+    layer: 'LAYER 02 — SHIFT CIPHER',
     ciphertext: 'tanlnf_qrxpbyah_thyoo',
     hint: 'Setiap huruf mengalami pergeseran sebanyak 13 posisi.',
-    commandHint: "echo 'tanlnf_qrxpbyah_thyoo' | tr 'A-Za-z' 'N-ZA-Mn-za-m'",
     answer: 'gnayas_dekcolnu_gulbb',
   },
   {
     stage: 3,
-    layer: 'LAYER 03 — REVERSE STRING',
+    layer: 'LAYER 03 — MIRRORED TEXT',
     ciphertext: 'gnayas_dekcolnu_gulbb',
     hint: 'Terkadang rahasia hanya perlu dibaca dari arah sebaliknya.',
-    commandHint: "echo 'gnayas_dekcolnu_gulbb' | rev",
     answer: 'bblug_unlocked_sayang',
   },
 ];
@@ -118,7 +115,7 @@ function getCtfBannerText(stageIndex: number, prefixNotice?: string): string {
   lines.push('----------------------------------------------------------------------');
   lines.push(`Ciphertext : ${stage.ciphertext}`);
   lines.push(`Petunjuk   : ${stage.hint}`);
-  lines.push(`Linux cmd  : ${stage.commandHint}`);
+  lines.push(`Referensi  : Cek Command Explorer (03 / THE LANGUAGE OF LINUX) untuk command & step penyelesaian.`);
   lines.push(`Submit     : /bblug <jawaban>  (atau ketik langsung jawabannya)`);
   lines.push('----------------------------------------------------------------------');
   return lines.join('\n');
@@ -195,6 +192,24 @@ export default function PlaygroundSection() {
   const [ctfStage, setCtfStage] = useState<number>(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const terminalScrollRef = useRef<HTMLDivElement>(null);
+  const executeCommandRef = useRef<(cmd: string) => void>(() => {});
+
+  // Listen for TRY IN PLAYGROUND commands from CommandExplorerSection
+  useEffect(() => {
+    const handleTryCommand = (e: Event) => {
+      const customEvent = e as CustomEvent<{ command?: string }>;
+      const cmd = customEvent.detail?.command;
+      if (cmd) {
+        setTerminalMode((prev) => (prev === 'minimized' ? 'normal' : prev));
+        setTimeout(() => {
+          executeCommandRef.current(cmd);
+          inputRef.current?.focus();
+        }, 350);
+      }
+    };
+    window.addEventListener('koral:try-command', handleTryCommand);
+    return () => window.removeEventListener('koral:try-command', handleTryCommand);
+  }, []);
 
   // Close maximized mode with Escape key
   useEffect(() => {
@@ -311,7 +326,7 @@ export default function PlaygroundSection() {
 
     let output = '';
     let isError = false;
-    let isEasterEgg = false;
+    const isEasterEgg = false;
     const lower = trimmed.toLowerCase();
 
     // CTF /bblug command check
@@ -437,7 +452,7 @@ export default function PlaygroundSection() {
             id: Math.random().toString(36).substring(2, 9),
             command: trimmed,
             path: currentPathStr,
-            output: `[-] Error: Invalid token payload for Stage ${ctfStage || 1}. Run the Linux cmd to decode the ciphertext.`,
+            output: `[-] Error: Invalid token payload for Stage ${ctfStage || 1}. Cek section Command Explorer (03 / THE LANGUAGE OF LINUX) untuk cara decode-nya.`,
             isError: true,
           },
         ]);
@@ -574,7 +589,7 @@ export default function PlaygroundSection() {
         }
       } else {
         const segments = target.split('/').filter(Boolean);
-        let testStack = [...pathStack];
+        const testStack = [...pathStack];
         let valid = true;
 
         for (const seg of segments) {
@@ -738,10 +753,137 @@ export default function PlaygroundSection() {
         isError = true;
       }
     }
+    // Command: hostname
+    else if (lower === 'hostname' || lower.startsWith('hostname ')) {
+      output = lower.includes('-i') ? '192.168.1.42' : 'koral';
+    }
+    // Command: free
+    else if (lower === 'free' || lower.startsWith('free ')) {
+      output = [
+        '               total        used        free      shared  buff/cache   available',
+        'Mem:            15Gi       3.2Gi       9.4Gi       210Mi       2.9Gi        12Gi',
+        'Swap:          2.0Gi          0B       2.0Gi',
+      ].join('\n');
+    }
+    // Command: cp
+    else if (lower.startsWith('cp ')) {
+      const parts = trimmed.split(/\s+/).filter((p) => !p.startsWith('-'));
+      const src = parts[1];
+      const dest = parts[2];
+      if (!src || !dest) {
+        output = 'cp: missing file operand';
+        isError = true;
+      } else {
+        const newFs = JSON.parse(JSON.stringify(fs));
+        const curr = getCurrentDirNode(newFs, pathStack);
+        if (curr && curr.children && curr.children[src]) {
+          curr.children[dest] = JSON.parse(JSON.stringify(curr.children[src]));
+          curr.children[dest].name = dest;
+          setFs(newFs);
+          output = `copied '${src}' -> '${dest}'`;
+        } else {
+          output = `cp: cannot stat '${src}': No such file or directory`;
+          isError = true;
+        }
+      }
+    }
+    // Command: mv
+    else if (lower.startsWith('mv ')) {
+      const parts = trimmed.split(/\s+/).filter((p) => !p.startsWith('-'));
+      const src = parts[1];
+      const dest = parts[2];
+      if (!src || !dest) {
+        output = 'mv: missing file operand';
+        isError = true;
+      } else {
+        const newFs = JSON.parse(JSON.stringify(fs));
+        const curr = getCurrentDirNode(newFs, pathStack);
+        if (curr && curr.children && curr.children[src]) {
+          curr.children[dest] = { ...curr.children[src], name: dest };
+          delete curr.children[src];
+          setFs(newFs);
+          output = `renamed '${src}' -> '${dest}'`;
+        } else {
+          output = `mv: cannot stat '${src}': No such file or directory`;
+          isError = true;
+        }
+      }
+    }
+    // Command: chmod / chown
+    else if (lower.startsWith('chmod ') || lower.startsWith('chown ')) {
+      const parts = trimmed.split(/\s+/);
+      if (parts.length < 3) {
+        output = `${parts[0]}: missing operand`;
+        isError = true;
+      } else {
+        output = `[simulated] ${parts[0]} applied to '${parts[parts.length - 1]}'`;
+      }
+    }
+    // Command: ip addr
+    else if (lower === 'ip addr' || lower.startsWith('ip ')) {
+      output = [
+        '1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN',
+        '    inet 127.0.0.1/8 scope host lo',
+        '2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 state UP',
+        '    inet 192.168.1.42/24 brd 192.168.1.255 scope global eth0',
+      ].join('\n');
+    }
+    // Command: ping
+    else if (lower.startsWith('ping ')) {
+      const host = trimmed.split(/\s+/).pop() || 'kernel.org';
+      output = [
+        `PING ${host} (139.178.84.217) 56(84) bytes of data.`,
+        `64 bytes from ${host}: icmp_seq=1 ttl=56 time=18.4 ms`,
+        `64 bytes from ${host}: icmp_seq=2 ttl=56 time=17.9 ms`,
+        `64 bytes from ${host}: icmp_seq=3 ttl=56 time=18.2 ms`,
+        `--- ${host} ping statistics ---`,
+        '3 packets transmitted, 3 received, 0% packet loss',
+      ].join('\n');
+    }
+    // Command: ssh
+    else if (lower.startsWith('ssh ')) {
+      const target = trimmed.split(/\s+/)[1] || 'explorer@koral.local';
+      output = `[simulated] Connecting to ${target} via SSH-2.0-OpenSSH_9.6p1...\nWelcome to Ubuntu 24.04 LTS (GNU/Linux 6.8.0-koral x86_64)`;
+    }
+    // Command: curl
+    else if (lower.startsWith('curl ')) {
+      output = [
+        'HTTP/2 200',
+        'server: nginx',
+        'content-type: text/html; charset=utf-8',
+        'x-koral-sandbox: simulated-response',
+      ].join('\n');
+    }
+    // Command: apt
+    else if (lower.startsWith('apt ') || lower.startsWith('sudo apt ')) {
+      if (lower.includes('update')) {
+        output = [
+          'Hit:1 http://archive.ubuntu.com/ubuntu noble InRelease',
+          'Get:2 http://security.ubuntu.com/ubuntu noble-security InRelease [126 kB]',
+          'Reading package lists... Done',
+          '14 packages can be upgraded. Run \'apt upgrade\' to upgrade them.',
+        ].join('\n');
+      } else if (lower.includes('install')) {
+        const pkg = trimmed.split(/\s+/).pop() || 'package';
+        output = [
+          'Reading package lists... Done',
+          `The following NEW packages will be installed: ${pkg}`,
+          `Unpacking ${pkg} ...`,
+          `Setting up ${pkg} ... done.`,
+        ].join('\n');
+      } else if (lower.includes('upgrade')) {
+        output = [
+          'Calculating upgrade... Done',
+          '14 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.',
+        ].join('\n');
+      } else {
+        output = 'apt: simulated package manager. Try apt update, apt install <pkg>, or apt upgrade.';
+      }
+    }
     // Command: help
     else if (lower === 'help') {
       output =
-        'GNU bash, version 5.2.21-release (x86_64-pc-linux-gnu)\nAvailable builtins & utilities: pwd, ls, cd, mkdir, touch, rm, cat, echo, head, tail, whoami, id, date, uptime, history, uname, clear.\nCTF challenge: /bblug';
+        'GNU bash, version 5.2.21-release (x86_64-pc-linux-gnu)\nAvailable builtins & utilities: pwd, ls, cd, mkdir, touch, cp, mv, rm, cat, echo, head, tail, whoami, hostname, free, id, date, uptime, history, uname, chmod, chown, ip, ping, ssh, curl, apt, clear.\nCTF challenge: /bblug';
     } else {
       output = `bash: ${trimmed.split(' ')[0]}: command not found`;
       isError = true;
@@ -760,6 +902,10 @@ export default function PlaygroundSection() {
     ]);
     setInputValue('');
   };
+
+  useEffect(() => {
+    executeCommandRef.current = executeCommand;
+  });
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -810,18 +956,23 @@ export default function PlaygroundSection() {
               </div>
             );
           }
-          if (line.startsWith('Linux cmd  : ')) {
-            const cmd = line.replace('Linux cmd  : ', '').trim();
+          if (line.startsWith('Referensi  : ')) {
+            const refText = line.replace('Referensi  : ', '').trim();
             return (
               <div key={idx} className="flex flex-wrap items-center gap-1 select-text">
-                <span className="text-neutral-500 select-none">Linux cmd  : </span>
-                <code
-                  onClick={() => handleChipClick(cmd)}
-                  className="text-[#FFC500] font-bold hover:underline cursor-pointer select-all"
-                  title="Klik untuk langsung eksekusi di terminal"
+                <span className="text-neutral-500 select-none">Referensi  : </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (terminalMode === 'maximized') setTerminalMode('normal');
+                    setTimeout(() => {
+                      document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                  }}
+                  className="text-sky-400 hover:text-[#FFC500] hover:underline cursor-pointer text-left"
                 >
-                  {cmd}
-                </code>
+                  {refText} ↗
+                </button>
               </div>
             );
           }
