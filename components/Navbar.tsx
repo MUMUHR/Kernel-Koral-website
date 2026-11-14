@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 interface NavbarProps {
   onStartQuiz?: () => void;
@@ -99,45 +100,41 @@ export default function Navbar({ onStartQuiz }: NavbarProps) {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-500 ease-in-out ${
-        isHidden
-          ? '-translate-y-full opacity-0 pointer-events-none'
-          : 'translate-y-0 opacity-100'
-      } ${
-        isDarkTheme
+      className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-500 ease-in-out ${isHidden
+        ? '-translate-y-full opacity-0 pointer-events-none'
+        : 'translate-y-0 opacity-100'
+        } ${isDarkTheme
           ? 'bg-[#000000]/85 backdrop-blur-md border-b border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.5)]'
           : isScrolled
-          ? 'bg-[#F0F0F0]/90 backdrop-blur-md border-b border-black/10 shadow-sm'
-          : 'bg-transparent border-b border-transparent'
-      }`}
+            ? 'bg-[#F0F0F0]/90 backdrop-blur-md border-b border-black/10 shadow-sm'
+            : 'bg-transparent border-b border-transparent'
+        }`}
     >
       <div className="max-w-[1776px] mx-auto px-6 lg:px-12 h-20 flex items-center justify-between">
         {/* Linux Wordmark */}
         <a
-          href="#"
-          className={`font-display font-bold text-2xl lg:text-[28px] tracking-tight transition-colors ${
-            isDarkTheme
-              ? 'text-white hover:text-[#FFC500]'
-              : 'text-black hover:opacity-80'
-          }`}
+          href="/"
+          className={`font-display font-bold text-2xl lg:text-[28px] tracking-tight transition-colors ${isDarkTheme
+            ? 'text-white hover:text-[#FFC500]'
+            : 'text-black hover:opacity-80'
+            }`}
         >
           KORAL-LINUX
         </a>
 
         {/* Main Navigation */}
         <nav
-          className={`hidden md:flex items-center gap-8 text-[12px] font-sans transition-colors ${
-            isDarkTheme ? 'text-white' : 'text-black'
-          }`}
+          className={`hidden md:flex items-center gap-8 text-[12px] font-sans transition-colors ${isDarkTheme ? 'text-white' : 'text-black'
+            }`}
         >
           {(
             [
-              { id: 'home', href: '#home', label: 'Home' },
-              { id: 'about', href: '#about', label: 'About Linux' },
-              { id: 'explore', href: '#explore', label: 'Explore' },
-              { id: 'playground', href: '#playground', label: 'Playground' },
-              { id: 'distributions', href: '#distributions', label: 'Distributions' },
-              { id: 'ecosystem', href: '#ecosystem', label: 'Ecosystem' },
+              { id: 'home', href: '/#home', label: 'Home' },
+              { id: 'about', href: '/#about', label: 'About Linux' },
+              { id: 'explore', href: '/#explore', label: 'Explore' },
+              { id: 'playground', href: '/#playground', label: 'Playground' },
+              { id: 'distributions', href: '/#distributions', label: 'Distributions' },
+              { id: 'ecosystem', href: '/#ecosystem', label: 'Ecosystem' },
             ] as const
           ).map((item) => {
             const isActive = activeSection === item.id;
@@ -154,8 +151,8 @@ export default function Navbar({ onStartQuiz }: NavbarProps) {
                         ? 'text-white'
                         : 'text-black'
                       : isDarkTheme
-                      ? 'text-white/70 hover:text-white'
-                      : 'text-black/70 hover:text-black'
+                        ? 'text-white/70 hover:text-white'
+                        : 'text-black/70 hover:text-black'
                   }
                 >
                   {item.label}
@@ -170,18 +167,17 @@ export default function Navbar({ onStartQuiz }: NavbarProps) {
 
         {/* Action Button */}
         <div className="flex items-center gap-4">
-          <a
-            href="#quiz"
+          <Link
+            href="/quiz"
             onClick={onStartQuiz}
-            className={`inline-flex items-center gap-2 px-5 py-2.5 font-mono font-bold text-[11px] tracking-wider uppercase border transition-all duration-150 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
-              isDarkTheme
-                ? 'bg-[#FFC500] hover:bg-white text-black border-[#FFC500] shadow-[2px_2px_0px_rgba(255,197,0,0.5)]'
-                : 'bg-[#FFC500] hover:bg-black hover:text-[#FFC500] text-black border-black shadow-[2px_2px_0px_#000000]'
-            }`}
+            className={`inline-flex items-center gap-2 px-5 py-2.5 font-mono font-bold text-[11px] tracking-wider uppercase border transition-all duration-150 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${isDarkTheme
+              ? 'bg-[#FFC500] hover:bg-white text-black border-[#FFC500] shadow-[2px_2px_0px_rgba(255,197,0,0.5)]'
+              : 'bg-[#FFC500] hover:bg-black hover:text-[#FFC500] text-black border-black shadow-[2px_2px_0px_#000000]'
+              }`}
           >
             <span>START QUIZ</span>
             <span className="text-base leading-none">↗</span>
-          </a>
+          </Link>
         </div>
       </div>
     </header>
