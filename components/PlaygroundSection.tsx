@@ -376,72 +376,85 @@ export default function PlaygroundSection() {
         setCtfStage(nextStageNum);
 
         if (isFinal) {
-          const finalOutput = [
-            '[+] Verifying token... VALID!',
-            '[+] STAGE 3 / 3 CLEARED · Layer 03 (Reverse String) unlocked!',
-            '[+] ============================================================',
-            '[+] ALL 3 STAGES CLEARED! CONGRATULATIONS, LINUX EXPLORER!',
-            '[+] FINAL FLAG CAPTURED: "bblug_unlocked_sayang"',
-            '[+] ROOT PRIVILEGES GRANTED: root@koral-linux',
-            '[+] ============================================================',
-            '[+] Streaming /etc/motd (BBLUG Mascot ASCII Art):',
-          ].join('\n');
-
-          setHistory((prev) => [
-            ...prev,
-            {
-              id: Math.random().toString(36).substring(2, 9),
-              command: trimmed,
-              path: currentPathStr,
-              output: finalOutput,
-              isEasterEgg: true,
-              asciiArt: BBLUG_ASCII,
-              postOutput: '[+] All 3 stages completed. Type "/bblug reset" to restart anytime.',
-            },
-          ]);
+          fetch('/aset/bblug_ascii.txt')
+            .then((res) => res.text())
+            .then((txt) => {
+              const finalOutput = [
+                '[+] Verifying token... VALID!',
+                '[+] STAGE 3 / 3 CLEARED · Layer 03 (Reverse String) unlocked!',
+                '[+] ============================================================',
+                '[+] ALL 3 STAGES CLEARED! CONGRATULATIONS, LINUX EXPLORER!',
+                '[+] FINAL FLAG CAPTURED: "bblug_unlocked_sayang"',
+                '[+] ROOT PRIVILEGES GRANTED: root@koral-linux',
+                '[+] ============================================================',
+                '[+] Easter Egg: bblug_ascii.txt',
+                txt,
+              ].join('\n');
+              setHistory((prev) => [
+                ...prev,
+                {
+                  id: Math.random().toString(36).substring(2, 9),
+                  command: trimmed,
+                  path: currentPathStr,
+                  output: finalOutput,
+                  isEasterEgg: true,
+                  asciiArt: txt,
+                  postOutput: '[+] All 3 stages completed. Type "/bblug reset" to restart anytime.',
+                },
+              ]);
+            });
         } else if (targetStage.stage === 1) {
-          // Stage 1 cleared -> show ASCII art reward from public/aset/bblug_ascii.txt!
-          const nextIdx = 1;
-          const stageOutput = [
-            '[+] Verifying token payload... VALID!',
-            `[+] STAGE 1 / 3 CLEARED · ${targetStage.layer} UNLOCKED`,
-            `[+] Accepted token: "${targetStage.answer}"`,
-            '[+] Reward unlocked: public/aset/bblug_ascii.txt (Stage 1 Payload):',
-          ].join('\n');
-
-          const nextChallengeText = getCtfBannerText(nextIdx, '[*] Moving to next challenge:');
-
-          setHistory((prev) => [
-            ...prev,
-            {
-              id: Math.random().toString(36).substring(2, 9),
-              command: trimmed,
-              path: currentPathStr,
-              output: stageOutput,
-              isEasterEgg: true,
-              asciiArt: BBLUG_ASCII,
-              postOutput: nextChallengeText,
-            },
-          ]);
-        } else {
-          const nextIdx = targetStage.stage;
-          const stageOutput = [
-            '[+] Verifying token payload... VALID!',
-            `[+] STAGE ${targetStage.stage} / 3 CLEARED · ${targetStage.layer} UNLOCKED`,
-            `[+] Accepted token: "${targetStage.answer}"`,
-            '',
-            getCtfBannerText(nextIdx, '[*] Moving to next challenge:'),
-          ].join('\n');
-
-          setHistory((prev) => [
-            ...prev,
-            {
-              id: Math.random().toString(36).substring(2, 9),
-              command: trimmed,
-              path: currentPathStr,
-              output: stageOutput,
-            },
-          ]);
+          fetch('/aset/bang_2.txt')
+            .then((res) => res.text())
+            .then((txt) => {
+              const nextIdx = 1;
+              const stageOutput = [
+                '[+] Verifying token payload... VALID!',
+                `[+] STAGE 1 / 3 CLEARED · ${targetStage.layer} UNLOCKED`,
+                `[+] Accepted token: "${targetStage.answer}"`,
+                '[+] Reward unlocked: bang_2.txt:',
+                txt,
+              ].join('\n');
+              const nextChallengeText = getCtfBannerText(nextIdx, '[*] Moving to next challenge:');
+              setHistory((prev) => [
+                ...prev,
+                {
+                  id: Math.random().toString(36).substring(2, 9),
+                  command: trimmed,
+                  path: currentPathStr,
+                  output: stageOutput,
+                  isEasterEgg: true,
+                  asciiArt: txt,
+                  postOutput: nextChallengeText,
+                },
+              ]);
+            });
+        } else if (targetStage.stage === 2) {
+          fetch('/aset/bang_fawas.txt')
+            .then((res) => res.text())
+            .then((txt) => {
+              const nextIdx = 2;
+              const stageOutput = [
+                '[+] Verifying token payload... VALID!',
+                `[+] STAGE 2 / 3 CLEARED · ${targetStage.layer} UNLOCKED`,
+                `[+] Accepted token: "${targetStage.answer}"`,
+                '[+] Reward unlocked: bang_fawas.txt:',
+                txt,
+                '',
+                getCtfBannerText(nextIdx, '[*] Moving to next challenge:'),
+              ].join('\n');
+              setHistory((prev) => [
+                ...prev,
+                {
+                  id: Math.random().toString(36).substring(2, 9),
+                  command: trimmed,
+                  path: currentPathStr,
+                  output: stageOutput,
+                  isEasterEgg: true,
+                  asciiArt: txt,
+                },
+              ]);
+            });
         }
         setInputValue('');
         return;
